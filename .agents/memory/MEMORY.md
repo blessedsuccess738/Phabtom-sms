@@ -1,0 +1,2 @@
+- [Tailwind v4 dark mode](tailwind-v4-dark.md) — `@apply dark` is invalid in Tailwind v4; use `class="dark"` on `<html>` in index.html instead
+- [Serialport native build approval](serialport-approval.md) — serialport requires `pnpm approve-builds` for native addon; modem mode silently fails without it

@@ -9,9 +9,9 @@ import {
   Activity, 
   CheckCircle2, 
   XCircle, 
-  ArrowRightRight,
+  Send,
   Server,
-  ActivitySquare,
+  BarChart2,
   Zap,
   ShieldCheck,
   Loader2
@@ -44,7 +44,7 @@ export function Dashboard() {
           title="Total Sent" 
           value={stats?.totalSent ?? "---"} 
           subValue={`Today: ${stats?.todaySent ?? "--"}`}
-          icon={ArrowRightRight} 
+          icon={Send} 
         />
         <StatsCard 
           title="Verified" 
@@ -64,7 +64,7 @@ export function Dashboard() {
           title="Success Rate" 
           value={stats ? `${stats.successRate.toFixed(1)}%` : "---"} 
           subValue="Last 30 days"
-          icon={ActivitySquare} 
+          icon={BarChart2} 
         />
       </div>
 
