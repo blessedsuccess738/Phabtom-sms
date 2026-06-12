@@ -4,25 +4,25 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
-const queryClient = new QueryClient();
+import { AppLayout } from "@/components/layout/AppLayout";
+import { Dashboard } from "@/pages/Dashboard";
+import { Logs } from "@/pages/Logs";
+import { Config } from "@/pages/Config";
+import { Sdk } from "@/pages/Sdk";
 
-function Home() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Replit Agent is building...</h1>
-        <p className="mt-2 text-sm text-gray-600">Your app will appear here once it's ready.</p>
-      </div>
-    </div>
-  );
-}
+const queryClient = new QueryClient();
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
+    <AppLayout>
+      <Switch>
+        <Route path="/" component={Dashboard} />
+        <Route path="/logs" component={Logs} />
+        <Route path="/config" component={Config} />
+        <Route path="/sdk" component={Sdk} />
+        <Route component={NotFound} />
+      </Switch>
+    </AppLayout>
   );
 }
 

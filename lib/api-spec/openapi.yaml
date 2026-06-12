@@ -3,13 +3,20 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Phantom Business SMS Gateway API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: otp
+    description: OTP send and verify operations
+  - name: gateway
+    description: Gateway configuration and status
+  - name: logs
+    description: SMS delivery logs and history
+
 paths:
   /healthz:
     get:
@@ -24,6 +31,194 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /otp/send:
+    post:
+      operationId: sendOtp
+      tags: [otp]
+      summary: Send an OTP to a phone number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpSendInput"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpSendResult"
+        "400":
+          description: Invalid phone number or request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [otp]
+      summary: Verify an OTP code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyInput"
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpVerifyResult"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /otp/logs:
+    get:
+      operationId: listOtpLogs
+      tags: [logs]
+      summary: List all OTP delivery logs
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, sent, delivered, failed, verified, expired]
+      responses:
+        "200":
+          description: List of OTP log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OtpLog"
+
+  /otp/logs/{id}:
+    get:
+      operationId: getOtpLog
+      tags: [logs]
+      summary: Get a specific OTP log entry
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OTP log entry
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpLog"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /gateway/status:
+    get:
+      operationId: getGatewayStatus
+      tags: [gateway]
+      summary: Get SMS gateway hardware/backend status
+      responses:
+        "200":
+          description: Gateway status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayStatus"
+
+  /gateway/config:
+    get:
+      operationId: getGatewayConfig
+      tags: [gateway]
+      summary: Get current gateway configuration
+      responses:
+        "200":
+          description: Gateway configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayConfig"
+    put:
+      operationId: updateGatewayConfig
+      tags: [gateway]
+      summary: Update gateway configuration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayConfigInput"
+      responses:
+        "200":
+          description: Updated configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayConfig"
+
+  /gateway/stats:
+    get:
+      operationId: getGatewayStats
+      tags: [gateway]
+      summary: Get gateway delivery statistics and counts
+      responses:
+        "200":
+          description: Gateway stats summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayStats"
+
+  /gateway/test:
+    post:
+      operationId: testGateway
+      tags: [gateway]
+      summary: Send a test SMS to verify gateway is working
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GatewayTestInput"
+      responses:
+        "200":
+          description: Test result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GatewayTestResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +229,215 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    OtpSendInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+          description: Phone number in E.164 format (e.g. +12025551234)
+        appId:
+          type: ["string", "null"]
+          description: Optional app identifier for multi-app gateways
+
+    OtpSendResult:
+      type: object
+      required: [success, requestId, expiresAt]
+      properties:
+        success:
+          type: boolean
+        requestId:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        channel:
+          type: ["string", "null"]
+          description: The send channel used (modem, email-sms, dev)
+
+    OtpVerifyInput:
+      type: object
+      required: [phone, code]
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          description: The 6-digit OTP code
+        requestId:
+          type: ["string", "null"]
+
+    OtpVerifyResult:
+      type: object
+      required: [verified, attemptsRemaining]
+      properties:
+        verified:
+          type: boolean
+        attemptsRemaining:
+          type: integer
+        reason:
+          type: ["string", "null"]
+          description: Reason for failure if not verified
+
+    OtpLog:
+      type: object
+      required: [id, phone, status, createdAt, expiresAt, attemptsUsed]
+      properties:
+        id:
+          type: integer
+        requestId:
+          type: string
+        phone:
+          type: string
+        status:
+          type: string
+          enum: [pending, sent, delivered, failed, verified, expired]
+        channel:
+          type: ["string", "null"]
+        appId:
+          type: ["string", "null"]
+        attemptsUsed:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        verifiedAt:
+          type: ["string", "null"]
+          format: date-time
+        errorMessage:
+          type: ["string", "null"]
+
+    GatewayStatus:
+      type: object
+      required: [online, channel, lastChecked]
+      properties:
+        online:
+          type: boolean
+        channel:
+          type: string
+          description: Active send channel (modem, email-sms, dev)
+        modemConnected:
+          type: boolean
+        modemPort:
+          type: ["string", "null"]
+        smtpReady:
+          type: boolean
+        lastChecked:
+          type: string
+          format: date-time
+        signal:
+          type: ["integer", "null"]
+          description: GSM signal strength 0-31 if modem connected
+
+    GatewayConfig:
+      type: object
+      required: [id, channel, otpLength, otpExpirySeconds, maxAttempts, rateWindowSeconds, maxPerWindow]
+      properties:
+        id:
+          type: integer
+        channel:
+          type: string
+          enum: [modem, email-sms, dev]
+        otpLength:
+          type: integer
+        otpExpirySeconds:
+          type: integer
+        maxAttempts:
+          type: integer
+        rateWindowSeconds:
+          type: integer
+        maxPerWindow:
+          type: integer
+        modemPort:
+          type: ["string", "null"]
+        smtpHost:
+          type: ["string", "null"]
+        smtpPort:
+          type: ["integer", "null"]
+        smtpUser:
+          type: ["string", "null"]
+        senderName:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+          format: date-time
+
+    GatewayConfigInput:
+      type: object
+      properties:
+        channel:
+          type: string
+          enum: [modem, email-sms, dev]
+        otpLength:
+          type: integer
+        otpExpirySeconds:
+          type: integer
+        maxAttempts:
+          type: integer
+        rateWindowSeconds:
+          type: integer
+        maxPerWindow:
+          type: integer
+        modemPort:
+          type: ["string", "null"]
+        smtpHost:
+          type: ["string", "null"]
+        smtpPort:
+          type: ["integer", "null"]
+        smtpUser:
+          type: ["string", "null"]
+        smtpPassword:
+          type: ["string", "null"]
+        senderName:
+          type: ["string", "null"]
+
+    GatewayStats:
+      type: object
+      required: [totalSent, totalVerified, totalFailed, totalExpired, successRate, todaySent, todayVerified]
+      properties:
+        totalSent:
+          type: integer
+        totalVerified:
+          type: integer
+        totalFailed:
+          type: integer
+        totalExpired:
+          type: integer
+        successRate:
+          type: number
+        todaySent:
+          type: integer
+        todayVerified:
+          type: integer
+        recentLogs:
+          type: array
+          items:
+            $ref: "#/components/schemas/OtpLog"
+
+    GatewayTestInput:
+      type: object
+      required: [phone]
+      properties:
+        phone:
+          type: string
+
+    GatewayTestResult:
+      type: object
+      required: [success, message]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        channel:
+          type: ["string", "null"]
