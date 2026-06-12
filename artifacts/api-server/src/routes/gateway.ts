@@ -17,7 +17,7 @@ async function getOrCreateConfig() {
   const [created] = await db
     .insert(gatewayConfigTable)
     .values({
-      channel: "dev",
+      channel: "email-sms",
       otpLength: 6,
       otpExpirySeconds: 300,
       maxAttempts: 3,
@@ -47,7 +47,8 @@ router.get("/gateway/status", async (req, res): Promise<void> => {
     channel === "email-sms" &&
     !!config.smtpHost &&
     !!config.smtpUser &&
-    !!config.smtpPassword;
+    !!config.smtpPassword &&
+    !!config.smsGatewayDomain;
 
   const online =
     channel === "dev" ||
@@ -173,6 +174,7 @@ router.post("/gateway/test", async (req, res): Promise<void> => {
     smtpPort: config.smtpPort,
     smtpUser: config.smtpUser,
     smtpPassword: config.smtpPassword,
+    smsGatewayDomain: config.smsGatewayDomain,
     senderName: config.senderName ?? "PhantomBusiness",
   });
 

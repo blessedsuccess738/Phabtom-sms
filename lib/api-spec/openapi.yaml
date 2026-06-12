@@ -366,6 +366,9 @@ components:
           type: ["integer", "null"]
         smtpUser:
           type: ["string", "null"]
+        smsGatewayDomain:
+          type: ["string", "null"]
+          description: Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)
         senderName:
           type: ["string", "null"]
         updatedAt:
@@ -398,6 +401,9 @@ components:
           type: ["string", "null"]
         smtpPassword:
           type: ["string", "null"]
+        smsGatewayDomain:
+          type: ["string", "null"]
+          description: Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)
         senderName:
           type: ["string", "null"]
 

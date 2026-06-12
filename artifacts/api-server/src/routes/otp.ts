@@ -23,9 +23,8 @@ function generateOtp(length: number): string {
 async function getConfig() {
   const [config] = await db.select().from(gatewayConfigTable).orderBy(gatewayConfigTable.id).limit(1);
   if (!config) {
-    // Return defaults if no config row yet
     return {
-      channel: "dev" as SmsChannel,
+      channel: "email-sms" as SmsChannel,
       otpLength: 6,
       otpExpirySeconds: 300,
       maxAttempts: 3,
@@ -36,6 +35,7 @@ async function getConfig() {
       smtpPort: null,
       smtpUser: null,
       smtpPassword: null,
+      smsGatewayDomain: null,
       senderName: "PhantomBusiness",
     };
   }
@@ -108,6 +108,7 @@ router.post("/otp/send", async (req, res): Promise<void> => {
     smtpPort: config.smtpPort,
     smtpUser: config.smtpUser,
     smtpPassword: config.smtpPassword,
+    smsGatewayDomain: config.smsGatewayDomain,
     senderName,
   });
 

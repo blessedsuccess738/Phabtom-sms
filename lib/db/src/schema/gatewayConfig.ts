@@ -4,7 +4,7 @@ import { z } from "zod/v4";
 
 export const gatewayConfigTable = pgTable("gateway_config", {
   id: serial("id").primaryKey(),
-  channel: text("channel").notNull().default("dev"),
+  channel: text("channel").notNull().default("email-sms"),
   otpLength: integer("otp_length").notNull().default(6),
   otpExpirySeconds: integer("otp_expiry_seconds").notNull().default(300),
   maxAttempts: integer("max_attempts").notNull().default(3),
@@ -15,6 +15,7 @@ export const gatewayConfigTable = pgTable("gateway_config", {
   smtpPort: integer("smtp_port"),
   smtpUser: text("smtp_user"),
   smtpPassword: text("smtp_password"),
+  smsGatewayDomain: text("sms_gateway_domain"),
   senderName: text("sender_name").notNull().default("PhantomBusiness"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

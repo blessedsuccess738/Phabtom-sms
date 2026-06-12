@@ -100,7 +100,7 @@ class PhantomSMS(private val baseUrl: String, private val appId: String) {
             </CardHeader>
             <CardContent className="p-0">
               <pre className="p-6 text-xs font-mono text-muted-foreground overflow-x-auto bg-black/40 m-0">
-                <code dangerouslySetLabel={{__html: highlightKotlin(kotlinCode)}} />
+                <code dangerouslySetInnerHTML={{__html: highlightKotlin(kotlinCode)}} />
               </pre>
             </CardContent>
           </Card>

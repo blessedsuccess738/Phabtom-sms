@@ -128,6 +128,7 @@ export const GetGatewayConfigResponse = zod.object({
   "smtpHost": zod.string().nullish(),
   "smtpPort": zod.number().nullish(),
   "smtpUser": zod.string().nullish(),
+  "smsGatewayDomain": zod.string().nullish().describe('Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)'),
   "senderName": zod.string().nullish(),
   "updatedAt": zod.coerce.date().optional()
 })
@@ -148,6 +149,7 @@ export const UpdateGatewayConfigBody = zod.object({
   "smtpPort": zod.number().nullish(),
   "smtpUser": zod.string().nullish(),
   "smtpPassword": zod.string().nullish(),
+  "smsGatewayDomain": zod.string().nullish().describe('Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)'),
   "senderName": zod.string().nullish()
 })
 
@@ -163,6 +165,7 @@ export const UpdateGatewayConfigResponse = zod.object({
   "smtpHost": zod.string().nullish(),
   "smtpPort": zod.number().nullish(),
   "smtpUser": zod.string().nullish(),
+  "smsGatewayDomain": zod.string().nullish().describe('Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)'),
   "senderName": zod.string().nullish(),
   "updatedAt": zod.coerce.date().optional()
 })

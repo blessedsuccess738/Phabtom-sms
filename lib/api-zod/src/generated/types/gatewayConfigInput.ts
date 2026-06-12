@@ -24,6 +24,11 @@ export interface GatewayConfigInput {
   smtpUser?: string | null;
   /** @nullable */
   smtpPassword?: string | null;
+  /**
+     * Carrier email-to-SMS gateway domain (e.g. txt.att.net, tmomail.net, vtext.com)
+     * @nullable
+     */
+  smsGatewayDomain?: string | null;
   /** @nullable */
   senderName?: string | null;
 }
