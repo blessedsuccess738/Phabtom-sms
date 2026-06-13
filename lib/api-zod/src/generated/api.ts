@@ -199,6 +199,73 @@ export const GetGatewayStatsResponse = zod.object({
 
 
 /**
+ * @summary List all API keys
+ */
+export const ListApiKeysResponseItem = zod.object({
+  "id": zod.number(),
+  "key": zod.string().describe('API key value (only shown in full on creation)'),
+  "name": zod.string(),
+  "appId": zod.string(),
+  "senderName": zod.string().nullish().describe('SMS sender ID shown to recipients (max 11 chars for GSM). Overrides global config.'),
+  "webhookUrl": zod.string().nullish().describe('URL to POST webhook events to'),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullish()
+})
+export const ListApiKeysResponse = zod.array(ListApiKeysResponseItem)
+
+
+/**
+ * @summary Create a new API key
+ */
+export const CreateApiKeyBody = zod.object({
+  "name": zod.string().optional(),
+  "appId": zod.string(),
+  "senderName": zod.string().nullish().describe('SMS sender ID for this app (max 11 chars)'),
+  "webhookUrl": zod.string().nullish()
+})
+
+
+/**
+ * @summary Revoke an API key
+ */
+export const RevokeApiKeyParams = zod.object({
+  "keyId": zod.coerce.number()
+})
+
+export const RevokeApiKeyResponse = zod.object({
+  "success": zod.boolean()
+})
+
+
+/**
+ * @summary Update webhook URL for an API key
+ */
+export const UpdateApiKeyParams = zod.object({
+  "keyId": zod.coerce.number()
+})
+
+export const UpdateApiKeyBody = zod.object({
+  "name": zod.string().optional(),
+  "senderName": zod.string().nullish(),
+  "webhookUrl": zod.string().nullish(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateApiKeyResponse = zod.object({
+  "id": zod.number(),
+  "key": zod.string().describe('API key value (only shown in full on creation)'),
+  "name": zod.string(),
+  "appId": zod.string(),
+  "senderName": zod.string().nullish().describe('SMS sender ID shown to recipients (max 11 chars for GSM). Overrides global config.'),
+  "webhookUrl": zod.string().nullish().describe('URL to POST webhook events to'),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date(),
+  "lastUsedAt": zod.coerce.date().nullish()
+})
+
+
+/**
  * @summary Send a test SMS to verify gateway is working
  */
 export const TestGatewayBody = zod.object({

@@ -8,6 +8,7 @@ import {
   Radio,
   LogOut,
   ChevronDown,
+  KeyRound,
 } from "lucide-react";
 import { useGetGatewayStatus, useHealthCheck } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/AuthContext";
@@ -29,6 +30,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Overview", icon: Activity },
     { href: "/logs", label: "Event Logs", icon: TerminalSquare },
     { href: "/config", label: "Configuration", icon: Settings },
+    { href: "/keys", label: "API Keys", icon: KeyRound },
     { href: "/sdk", label: "SDK Integration", icon: Code2 },
   ];
 

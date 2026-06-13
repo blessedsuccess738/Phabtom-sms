@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm run typecheck:libs && pnpm --filter @workspace/phantom-sms run build",
+  "outputDirectory": "dist/public",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
+}

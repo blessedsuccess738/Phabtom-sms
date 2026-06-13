@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './apiKey';
+export * from './createApiKeyInput';
 export * from './errorResponse';
 export * from './gatewayConfig';
 export * from './gatewayConfigChannel';
@@ -24,3 +26,5 @@ export * from './otpSendInput';
 export * from './otpSendResult';
 export * from './otpVerifyInput';
 export * from './otpVerifyResult';
+export * from './revokeApiKey200';
+export * from './updateApiKeyInput';

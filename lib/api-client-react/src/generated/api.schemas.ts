@@ -179,6 +179,49 @@ export interface GatewayStats {
   recentLogs?: OtpLog[];
 }
 
+export interface ApiKey {
+  id: number;
+  /** API key value (only shown in full on creation) */
+  key: string;
+  name: string;
+  appId: string;
+  /**
+     * SMS sender ID shown to recipients (max 11 chars for GSM). Overrides global config.
+     * @nullable
+     */
+  senderName?: string | null;
+  /**
+     * URL to POST webhook events to
+     * @nullable
+     */
+  webhookUrl?: string | null;
+  isActive: boolean;
+  createdAt: string;
+  /** @nullable */
+  lastUsedAt?: string | null;
+}
+
+export interface CreateApiKeyInput {
+  name?: string;
+  appId: string;
+  /**
+     * SMS sender ID for this app (max 11 chars)
+     * @nullable
+     */
+  senderName?: string | null;
+  /** @nullable */
+  webhookUrl?: string | null;
+}
+
+export interface UpdateApiKeyInput {
+  name?: string;
+  /** @nullable */
+  senderName?: string | null;
+  /** @nullable */
+  webhookUrl?: string | null;
+  isActive?: boolean;
+}
+
 export interface GatewayTestInput {
   phone: string;
 }
@@ -207,4 +250,8 @@ export const ListOtpLogsStatus = {
   verified: 'verified',
   expired: 'expired',
 } as const;
+
+export type RevokeApiKey200 = {
+  success: boolean;
+};
 

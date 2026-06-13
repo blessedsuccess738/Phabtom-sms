@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, desc, and, gte, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { db, otpLogsTable, gatewayConfigTable } from "@workspace/db";
+import { db, otpLogsTable, gatewayConfigTable, apiKeysTable } from "@workspace/db";
 import {
   SendOtpBody,
   VerifyOtpBody,
@@ -9,6 +9,7 @@ import {
   GetOtpLogParams,
 } from "@workspace/api-zod";
 import { sendSms, type SmsChannel } from "../lib/smsDispatch";
+import { fireWebhook } from "../lib/webhook";
 
 const router: IRouter = Router();
 
@@ -40,6 +41,17 @@ async function getConfig() {
     };
   }
   return config;
+}
+
+/** Look up the webhook URL for an appId via the first active API key for that app */
+async function getWebhookUrlForApp(appId: string | null | undefined): Promise<string | null> {
+  if (!appId) return null;
+  const [row] = await db
+    .select({ webhookUrl: apiKeysTable.webhookUrl })
+    .from(apiKeysTable)
+    .where(and(eq(apiKeysTable.appId, appId), eq(apiKeysTable.isActive, true)))
+    .limit(1);
+  return row?.webhookUrl ?? null;
 }
 
 // POST /otp/send
@@ -98,6 +110,16 @@ router.post("/otp/send", async (req, res): Promise<void> => {
     })
     .returning();
 
+  // Fire webhook: otp.sent (non-blocking)
+  const webhookUrl = await getWebhookUrlForApp(appId);
+  void fireWebhook(webhookUrl, {
+    event: "otp.sent",
+    requestId,
+    phone,
+    appId,
+    timestamp: new Date().toISOString(),
+  });
+
   // Send SMS
   const result = await sendSms({
     phone,
@@ -123,9 +145,28 @@ router.post("/otp/send", async (req, res): Promise<void> => {
 
   if (!result.success) {
     req.log.warn({ phone, error: result.error }, "OTP send failed");
+    // Fire webhook: otp.failed
+    void fireWebhook(webhookUrl, {
+      event: "otp.failed",
+      requestId,
+      phone,
+      appId,
+      timestamp: new Date().toISOString(),
+      meta: { error: result.error },
+    });
     res.status(500).json({ error: result.error ?? "Failed to send SMS" });
     return;
   }
+
+  // Fire webhook: otp.delivered
+  void fireWebhook(webhookUrl, {
+    event: "otp.delivered",
+    requestId,
+    phone,
+    appId,
+    timestamp: new Date().toISOString(),
+    meta: { channel: result.channel },
+  });
 
   req.log.info({ phone, requestId, channel: result.channel }, "OTP sent");
   res.json({
@@ -171,6 +212,14 @@ router.post("/otp/verify", async (req, res): Promise<void> => {
   // Check expiry
   if (new Date() > log.expiresAt) {
     await db.update(otpLogsTable).set({ status: "expired" }).where(eq(otpLogsTable.id, log.id));
+    const webhookUrl = await getWebhookUrlForApp(log.appId);
+    void fireWebhook(webhookUrl, {
+      event: "otp.expired",
+      requestId: log.requestId,
+      phone,
+      appId: log.appId,
+      timestamp: new Date().toISOString(),
+    });
     res.json({ verified: false, attemptsRemaining: 0, reason: "OTP has expired" });
     return;
   }
@@ -178,6 +227,7 @@ router.post("/otp/verify", async (req, res): Promise<void> => {
   // Check attempts
   const attemptsUsed = log.attemptsUsed + 1;
   const attemptsRemaining = config.maxAttempts - attemptsUsed;
+  const webhookUrl = await getWebhookUrlForApp(log.appId);
 
   if (log.code !== code) {
     if (attemptsRemaining <= 0) {
@@ -185,6 +235,14 @@ router.post("/otp/verify", async (req, res): Promise<void> => {
         .update(otpLogsTable)
         .set({ status: "failed", attemptsUsed, errorMessage: "Max attempts exceeded" })
         .where(eq(otpLogsTable.id, log.id));
+      void fireWebhook(webhookUrl, {
+        event: "otp.failed",
+        requestId: log.requestId,
+        phone,
+        appId: log.appId,
+        timestamp: new Date().toISOString(),
+        meta: { reason: "Max attempts exceeded" },
+      });
       res.json({ verified: false, attemptsRemaining: 0, reason: "Max attempts exceeded" });
     } else {
       await db.update(otpLogsTable).set({ attemptsUsed }).where(eq(otpLogsTable.id, log.id));
@@ -198,6 +256,15 @@ router.post("/otp/verify", async (req, res): Promise<void> => {
     .update(otpLogsTable)
     .set({ status: "verified", attemptsUsed, verifiedAt: new Date() })
     .where(eq(otpLogsTable.id, log.id));
+
+  // Fire webhook: otp.verified
+  void fireWebhook(webhookUrl, {
+    event: "otp.verified",
+    requestId: log.requestId,
+    phone,
+    appId: log.appId,
+    timestamp: new Date().toISOString(),
+  });
 
   req.log.info({ phone, requestId: log.requestId }, "OTP verified successfully");
   res.json({ verified: true, attemptsRemaining });
@@ -231,7 +298,7 @@ router.get("/otp/logs", async (req, res): Promise<void> => {
       createdAt: l.createdAt.toISOString(),
       expiresAt: l.expiresAt.toISOString(),
       verifiedAt: l.verifiedAt?.toISOString() ?? null,
-      code: undefined, // Never expose code in logs
+      code: undefined,
     }))
   );
 });
