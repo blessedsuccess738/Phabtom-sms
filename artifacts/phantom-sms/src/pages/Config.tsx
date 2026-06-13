@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Save, Send, Loader2, RefreshCw, Info } from "lucide-react";
+import { Save, Send, Loader2, RefreshCw, Info, Zap } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 const configSchema = z.object({
   channel: z.enum(["modem", "email-sms", "dev"]),
@@ -48,6 +49,7 @@ export function Config() {
   const updateConfig = useUpdateGatewayConfig();
   const testGateway = useTestGateway();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const form = useForm<ConfigFormValues>({
     resolver: zodResolver(configSchema),
@@ -323,7 +325,26 @@ export function Config() {
 
                     {/* SMTP credentials */}
                     <div className="pt-2 border-t border-border/50">
-                      <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4">SMTP Credentials (your email account)</p>
+                      <div className="flex items-center justify-between mb-4">
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground">SMTP Credentials (your email account)</p>
+                        {user?.email && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-3 text-xs border-primary/40 text-primary hover:bg-primary/10 gap-1.5"
+                            onClick={() => {
+                              form.setValue("smtpHost", "smtp.gmail.com");
+                              form.setValue("smtpPort", 587);
+                              form.setValue("smtpUser", user.email!);
+                              toast({ title: "Auto-filled!", description: `Gmail settings filled using ${user.email}. Add your App Password to complete.` });
+                            }}
+                          >
+                            <Zap className="w-3 h-3" />
+                            Auto-fill from Google
+                          </Button>
+                        )}
+                      </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
