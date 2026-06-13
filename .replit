@@ -30,3 +30,14 @@ externalPort = 80
 [[ports]]
 localPort = 19840
 externalPort = 3000
+
+[userenv]
+
+[userenv.shared]
+VITE_FIREBASE_API_KEY = "AIzaSyDeOgjlyOl1QWIs6BAGURbFfEQpRBhYY_Q"
+VITE_FIREBASE_AUTH_DOMAIN = "phantom-chat-me.firebaseapp.com"
+VITE_FIREBASE_PROJECT_ID = "phantom-chat-me"
+VITE_FIREBASE_STORAGE_BUCKET = "phantom-chat-me.firebasestorage.app"
+VITE_FIREBASE_MESSAGING_SENDER_ID = "284915478523"
+VITE_FIREBASE_APP_ID = "1:284915478523:web:4329958cb7e3f65fdc255e"
+VITE_FIREBASE_MEASUREMENT_ID = "G-XE7SNZ1K5N"
